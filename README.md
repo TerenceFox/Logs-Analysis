@@ -37,7 +37,7 @@ create view author_rank as
         group by articles.author
         order by hits desc;
 ```
-##Installation
+## Installation
 
 The parameters of the project assume the presence of Python, PostgresSQL, the psycopg2 python module, and the news SQL database on your local machine. Once the view above is created in your psql prompt, simply run the script.
 
