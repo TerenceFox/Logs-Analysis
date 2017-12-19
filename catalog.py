@@ -15,24 +15,25 @@ def question_1():
     db = psycopg2.connect(database=DBNAME)
     c = db.cursor()
     c.execute("""
-        select articles.title, subq.hits
-        from articles,
+        SELECT articles.title, subq.hits
+        FROM articles,
         (
         --Group pageviews according to their slug, then sort, omitting root
-            select log.path as slug, count(log.path) as hits
-            from log
+            SELECT log.path AS slug, COUNT(log.path) AS hits
+            FROM log
         --Omit 404s
-            where status = '200 OK'
-            group by path
-            order by hits desc
+            WHERE status = '200 OK'
+            GROUP BY path
+            ORDER BY hits DESC
         --Omit root
-            offset 1
-        ) as subq
-        where articles.slug = substring(subq.slug, 10, 100)
-        limit 3;
+            OFFSET 1
+        ) AS subq
+        WHERE articles.slug = SUBSTRING(subq.slug, 10, 100)
+        LIMIT 3;
     """)
-    return c.fetchall()
     db.close()
+    return c.fetchall()
+
 
 
 # Returns Question 2 of Log Analysis: The article authors, ranked in
@@ -47,13 +48,13 @@ def question_2():
     db = psycopg2.connect(database=DBNAME)
     c = db.cursor()
     c.execute("""
-        select authors.name, author_rank.hits
-            from authors, author_rank
-            where authors.id = author_rank.author_id;
+        SELECT authors.name, author_rank.hits
+            FROM authors, author_rank
+            WHERE authors.id = author_rank.author_id;
     """)
-
-    return c.fetchall()
     db.close()
+    return c.fetchall()
+
 
 
 # Returns Question 3 of Log Analysis: On which days did more than 1% of
@@ -68,32 +69,32 @@ def question_3():
     db = psycopg2.connect(database=DBNAME)
     c = db.cursor()
     c.execute("""
-        select good.log_d, round(((((error.http+0.0) / (good.http+0.0)))*100),
-        2) as error_rate
-            from
+        SELECT good.log_d, round(((((error.http+0.0) / (good.http+0.0)))*100),
+        2) AS error_rate
+            FROM
         -- Count instances of 200 responses in each day.
                 (
-                select count(*) as http, date_trunc('day', time) as log_d
-                from log
-                where status = '200 OK'
-                group by log_d
-                order by log_d
-            ) as good join
+                SELECT count(*) AS http, date_trunc('day', TIME) AS log_d
+                FROM log
+                WHERE status = '200 OK'
+                GROUP BY log_d
+                ORDER BY log_d
+            ) AS good JOIN
         --Count instances of 404 responses in each day.
                 (
-                select count(*) as http, date_trunc('day', time) as log_d
-                from log
-                where status = '404 NOT FOUND'
-                group by log_d
-                order by log_d
-            ) as error
-            on good.log_d = error.log_d
+                SELECT count(*) AS http, date_trunc('day', TIME) AS log_d
+                FROM log
+                WHERE status = '404 NOT FOUND'
+                GROUP BY log_d
+                ORDER BY log_d
+            ) AS error
+            ON good.log_d = error.log_d
         -- Only return error rates equal to or above 1 percent.
-            where error.http >= (good.http/100);
+            WHERE error.http >= (good.http/100);
         """)
-
-    return c.fetchall()
     db.close()
+    return c.fetchall()
+
 
 
 # This section will display to the user with the results of the queries.
